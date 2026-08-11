@@ -12,14 +12,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV UV_PYTHON_DOWNLOADS=0
 WORKDIR /build
 
-RUN --mount=type=cache,id=uv-cache,target=/root/.cache/uv \
+RUN --mount=type=cache,id=s/14d493fb-8434-40d2-b6e1-b5337ba295f7-/root/.cache/uv,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     uv sync --frozen --no-install-project --no-dev
 
 ADD . /build
 
-RUN --mount=type=cache,id=uv-cache,target=/root/.cache/uv \
+RUN --mount=type=cache,id=s/14d493fb-8434-40d2-b6e1-b5337ba295f7-/root/.cache/uv,target=/root/.cache/uv \
     uv sync --frozen --no-dev
 
 
@@ -30,7 +30,6 @@ WORKDIR /code
 
 ENV PATH="/code/.venv/bin:$PATH"
 
-# Install curl for health checks
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
@@ -41,7 +40,6 @@ RUN chmod +x /usr/bin/pasarguard-cli
 COPY tui_wrapper.sh /usr/bin/pasarguard-tui
 RUN chmod +x /usr/bin/pasarguard-tui
 
-# Copy healthcheck script
 COPY healthcheck.sh /code/healthcheck.sh
 RUN chmod +x /code/healthcheck.sh
 
