@@ -1,7 +1,10 @@
 ARG PYTHON_VERSION=3.14
 
 FROM ghcr.io/astral-sh/uv:python$PYTHON_VERSION-bookworm-slim AS builder
-ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
+ENV UV_PYTHON_DOWNLOADS=0
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
@@ -9,23 +12,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libc6-dev \
     && rm -rf /var/lib/apt/lists/*
 
-ENV UV_PYTHON_DOWNLOADS=0
 WORKDIR /build
 
-RUN --mount=type=cache,id=s/14d493fb-8434-40d2-b6e1-b5337ba295f7-/root/.cache/uv,target=/root/.cache/uv \
-    --mount=type=bind,source=uv.lock,target=uv.lock \
-    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-install-project --no-dev
+COPY uv.lock pyproject.toml ./
+
+RUN uv sync --frozen --no-install-project --no-dev
 
 ADD . /build
 
-RUN --mount=type=cache,id=s/14d493fb-8434-40d2-b6e1-b5337ba295f7-/root/.cache/uv,target=/root/.cache/uv \
-    uv sync --frozen --no-dev
+RUN uv sync --frozen --no-dev
 
 
 FROM python:$PYTHON_VERSION-slim-bookworm
 
 COPY --from=builder /build /code
+
 WORKDIR /code
 
 ENV PATH="/code/.venv/bin:$PATH"
